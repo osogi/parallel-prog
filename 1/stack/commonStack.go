@@ -1,20 +1,26 @@
 package stack
 
+import (
+	"sync/atomic"
+)
+
 type node[T any] struct {
 	val  T
-	next *node[T]
+	next atomic.Pointer[node[T]]
 }
 
 type CommonStack[T any] struct {
-	top *node[T]
+	top atomic.Pointer[node[T]]
 }
 
 func newNode[T any](val T, ptr *node[T]) *node[T] {
-	return &node[T]{val, ptr}
+	nd := node[T]{val: val}
+	nd.next.Store(ptr)
+	return &nd
 }
 
 func NewCommonStack[T any]() *CommonStack[T] {
-	return &CommonStack[T]{nil}
+	return &CommonStack[T]{}
 }
 
 func (st *CommonStack[T]) Push(elem T) error {
@@ -22,13 +28,13 @@ func (st *CommonStack[T]) Push(elem T) error {
 		return ErrorNilPointer
 	}
 
-	if st.top == nil {
-		st.top = newNode(elem, nil)
-	} else {
-		buf := newNode(elem, st.top)
-		st.top = buf
+	for {
+		top := st.top.Load()
+		newTop := newNode(elem, top)
+		if st.top.CompareAndSwap(top, newTop) {
+			return nil
+		}
 	}
-	return nil
 }
 
 func (st *CommonStack[T]) Pop() (T, error) {
@@ -37,12 +43,15 @@ func (st *CommonStack[T]) Pop() (T, error) {
 		return elem, ErrorNilPointer
 	}
 
-	if st.top == nil {
+	if st.top.Load() == nil {
 		return elem, ErrorEmptyStack
 	} else {
-		elem = st.top.val
-		st.top = st.top.next
-		return elem, nil
+		for {
+			top := st.top.Load()
+			if st.top.CompareAndSwap(top, top.next.Load()) {
+				return top.val, nil
+			}
+		}
 	}
 }
 
@@ -51,6 +60,6 @@ func (st *CommonStack[T]) Top() (T, error) {
 	if st == nil {
 		return elem, ErrorNilPointer
 	} else {
-		return st.top.val, nil
+		return st.top.Load().val, nil
 	}
 }
