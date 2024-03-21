@@ -1,6 +1,7 @@
 package stack
 
 import (
+	"fmt"
 	"sync/atomic"
 )
 
@@ -43,11 +44,12 @@ func (st *CommonStack[T]) Pop() (T, error) {
 		return elem, ErrorNilPointer
 	}
 
-	if st.top.Load() == nil {
+	top := st.top.Load()
+	if top == nil {
 		return elem, ErrorEmptyStack
 	} else {
 		for {
-			top := st.top.Load()
+
 			if st.top.CompareAndSwap(top, top.next.Load()) {
 				return top.val, nil
 			}
@@ -60,6 +62,25 @@ func (st *CommonStack[T]) Top() (T, error) {
 	if st == nil {
 		return elem, ErrorNilPointer
 	} else {
-		return st.top.Load().val, nil
+		top := st.top.Load()
+		if top == nil {
+			return elem, ErrorEmptyStack
+		} else {
+			return top.val, nil
+		}
 	}
+}
+
+func (st *CommonStack[T]) Stringify() string {
+	str := "> "
+	if st == nil {
+		return str
+	}
+
+	n := st.top.Load()
+	for n != nil {
+		str += fmt.Sprintf("%v ", n.val)
+		n = n.next.Load()
+	}
+	return str
 }
