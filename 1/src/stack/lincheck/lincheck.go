@@ -33,6 +33,9 @@ func (pe *pushEvent) rollback(st stack.Stack[int]) {
 func (pe *pushEvent) stringify() string {
 	return fmt.Sprintf("Push(%d): | err: %v", pe.elem, pe.res)
 }
+func (pe *pushEvent) clean() {
+	*pe = pushEvent{elem: pe.elem}
+}
 
 type popEvent struct {
 	elem    int
@@ -45,6 +48,7 @@ func (pe *popEvent) execute(st stack.Stack[int]) {
 	pe.elem, pe.err = st.Pop()
 }
 func (pe *popEvent) check(st stack.Stack[int]) bool {
+	pe.checked = nil
 	cp := *pe
 	cp.execute(st)
 
@@ -60,6 +64,9 @@ func (pe *popEvent) rollback(st stack.Stack[int]) {
 }
 func (pe *popEvent) stringify() string {
 	return fmt.Sprintf("Pop(): %d | err: %v", pe.elem, pe.err)
+}
+func (pe *popEvent) clean() {
+	*pe = popEvent{}
 }
 
 type topEvent struct {
@@ -80,22 +87,27 @@ func (te *topEvent) rollback(st stack.Stack[int]) {}
 func (te *topEvent) stringify() string {
 	return fmt.Sprintf("Top(): %d | err: %v", te.elem, te.err)
 }
+func (te *topEvent) clean() {
+	*te = topEvent{}
+}
 
 type event interface {
 	generate(*rand.Rand)
 	execute(stack.Stack[int])
 	check(stack.Stack[int]) bool
 	stringify() string
+	clean()
 
 	// this is a little bit strange too. Maybe we should use some other method
 	rollback(stack.Stack[int])
 }
 
 type thread struct {
-	events []event
+	events  []event
+	curstep int
 }
 
-func makeThread(size int, rg *rand.Rand) thread {
+func newThread(size int, rg *rand.Rand) *thread {
 	events := make([]event, size)
 	for i := 0; i < size; i++ {
 		var e event
@@ -111,44 +123,80 @@ func makeThread(size int, rg *rand.Rand) thread {
 		e.generate(rg)
 		events[i] = e
 	}
-	return thread{events: events}
+	return &thread{events: events, curstep: 0}
 }
 
 func (th *thread) execute(st stack.Stack[int]) {
 
-	for _, ev := range th.events {
+	for i, ev := range th.events {
+		th.curstep = i
 		ev.execute(st)
-		sl := rand.Intn(512)
-		if sl < 100 {
+		sl := rand.Intn(64)
+		if sl < 10 {
 			time.Sleep(time.Duration(sl) * time.Millisecond)
 		}
+	}
+	th.curstep = len(th.events)
+}
+
+func (th *thread) clean() {
+	for _, ev := range th.events {
+		ev.clean()
 	}
 }
 
 type Checker struct {
-	threads []thread
+	threads []*thread
 	st      stack.Stack[int]
+	timeout time.Duration
 }
 
-func MakeChecker(st stack.Stack[int], threadNum int, threadSize int, randSeed int64) Checker {
+func MakeChecker(st stack.Stack[int], threadNum int, threadSize int, randSeed int64, timeout time.Duration) Checker {
 	randGen := rand.New(rand.NewSource(randSeed))
-	threads := make([]thread, threadNum)
+	threads := make([]*thread, threadNum)
 	for i := 0; i < threadNum; i++ {
-		threads[i] = makeThread(threadSize, randGen)
+		threads[i] = newThread(threadSize, randGen)
 	}
-	return Checker{threads: threads, st: st}
+	return Checker{threads: threads, st: st, timeout: timeout}
 }
 
-func (c *Checker) run() {
-	wg := sync.WaitGroup{}
-	wg.Add(len(c.threads))
+func (c *Checker) run(timeout time.Duration) (bool, []int) {
+	randevu := sync.WaitGroup{}
+	randevu.Add(len(c.threads))
+	isTimeEnd := make(chan bool, len(c.threads))
+
 	for _, th := range c.threads {
+		th.clean()
 		go func() {
-			th.execute(c.st)
-			wg.Done()
+			ended := make(chan bool, 1)
+			randevu.Done()
+			randevu.Wait()
+
+			go func() {
+				th.execute(c.st)
+				ended <- true
+			}()
+			select {
+			case <-ended:
+				isTimeEnd <- false
+			case <-time.After(timeout):
+				isTimeEnd <- true
+			}
 		}()
 	}
-	wg.Wait()
+
+	noTimeouts := true
+	for i := 0; i < len(c.threads); i++ {
+		isTimeout := <-isTimeEnd
+		noTimeouts = noTimeouts && !isTimeout
+	}
+
+	lastSteps := make([]int, len(c.threads))
+	for i, th := range c.threads {
+		lastSteps[i] = th.curstep
+	}
+
+	return noTimeouts, lastSteps
 }
 
 func sum(a []int) int {
@@ -159,30 +207,32 @@ func sum(a []int) int {
 	return n
 }
 
-func (c *Checker) checkStep(thread_exe []int) (bool, []int) {
-	var find = false
-	retArr := thread_exe
+func (c *Checker) checkStep(thread_exe *[]int) (bool, []int) {
 	end := 0
-	//fmt.Printf("%v %s\n", thread_exe, c.st.Stringify())
-
-	for i, num := range thread_exe {
+	// fmt.Printf("%v\n", thread_exe)
+	find := false
+	retArr := make([]int, len(*thread_exe))
+	copy(retArr, *thread_exe)
+	for i, num := range *thread_exe {
 		if num == len(c.threads[i].events) {
 			end += 1
 		} else {
 			if c.threads[i].events[num].check(c.st) {
-				new_thread_exe := make([]int, len(thread_exe))
-				copy(new_thread_exe, thread_exe)
-				new_thread_exe[i] = num + 1
-				v, arr := c.checkStep(new_thread_exe)
+				(*thread_exe)[i] = num + 1
+				v, arr := c.checkStep(thread_exe)
+				(*thread_exe)[i] = num
 				if !v {
 					if sum(retArr) < sum(arr) {
 						retArr = arr
 					}
 				} else {
-					find = v
+					find = true
 				}
 			}
 			c.threads[i].events[num].rollback(c.st)
+		}
+		if find {
+			break
 		}
 	}
 	if end == len(c.threads) {
@@ -197,7 +247,7 @@ func (c *Checker) check() (bool, []int) {
 		thread_exe[i] = 0
 	}
 
-	return c.checkStep(thread_exe)
+	return c.checkStep(&thread_exe)
 }
 
 func emptyStack[T any](st stack.Stack[T]) {
@@ -216,13 +266,18 @@ func emptyStack[T any](st stack.Stack[T]) {
 
 func (c *Checker) RunCheck(num int) error {
 	var err error = nil
+	var passCheck, passTimeout bool
+	var failSteps []int
 	for i := 1; i <= num; i++ {
 		emptyStack(c.st)
-		c.run()
-		emptyStack(c.st)
-		pass, failSteps := c.check()
+		passTimeout, failSteps = c.run(c.timeout)
+		if passTimeout {
+			emptyStack(c.st)
+			passCheck, failSteps = c.check()
+		}
+
 		// fmt.Print("\n\n\n")
-		if !pass {
+		if !passTimeout || !passCheck {
 			trace := ""
 			for i, th := range c.threads {
 				trace += fmt.Sprintf("Thread %d:\n", i)
@@ -234,8 +289,18 @@ func (c *Checker) RunCheck(num int) error {
 					trace += fmt.Sprintf("\t%s%s\n", pointer, ev.stringify())
 				}
 			}
+			var errMsg string
+			fmt.Printf("%+v %+v\n", passTimeout, passCheck)
+			switch {
+			case !passTimeout:
+				errMsg = "timeout was reached. Trace of execution:"
+			case !passCheck:
+				errMsg = "caught a case of impossible linearization in this trace"
+			default:
+				errMsg = "osogi is bad coder"
+			}
+			err = fmt.Errorf("[%d/%d]: %s\n%s", i, num, errMsg, trace)
 
-			err = fmt.Errorf("[%d/%d]: caught a case of impossible linearization in this trace\n%s", i, num, trace)
 			break
 		}
 	}
