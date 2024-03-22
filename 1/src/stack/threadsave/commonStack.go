@@ -1,7 +1,8 @@
-package stack
+package threadsave
 
 import (
 	"fmt"
+	"parallel-prog/1/stack"
 	"sync/atomic"
 )
 
@@ -26,7 +27,7 @@ func NewCommonStack[T any]() *CommonStack[T] {
 
 func (st *CommonStack[T]) Push(elem T) error {
 	if st == nil {
-		return ErrorNilPointer
+		return stack.ErrorNilPointer
 	}
 
 	for {
@@ -41,15 +42,13 @@ func (st *CommonStack[T]) Push(elem T) error {
 func (st *CommonStack[T]) Pop() (T, error) {
 	var elem T
 	if st == nil {
-		return elem, ErrorNilPointer
+		return elem, stack.ErrorNilPointer
 	}
-
-	top := st.top.Load()
-	if top == nil {
-		return elem, ErrorEmptyStack
-	} else {
-		for {
-
+	for {
+		top := st.top.Load()
+		if top == nil {
+			return elem, stack.ErrorEmptyStack
+		} else {
 			if st.top.CompareAndSwap(top, top.next.Load()) {
 				return top.val, nil
 			}
@@ -60,11 +59,11 @@ func (st *CommonStack[T]) Pop() (T, error) {
 func (st *CommonStack[T]) Top() (T, error) {
 	var elem T
 	if st == nil {
-		return elem, ErrorNilPointer
+		return elem, stack.ErrorNilPointer
 	} else {
 		top := st.top.Load()
 		if top == nil {
-			return elem, ErrorEmptyStack
+			return elem, stack.ErrorEmptyStack
 		} else {
 			return top.val, nil
 		}

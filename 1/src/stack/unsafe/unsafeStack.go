@@ -1,6 +1,9 @@
-package stack
+package unsafe
 
-import "fmt"
+import (
+	"fmt"
+	"parallel-prog/1/stack"
+)
 
 type unsafeNode[T any] struct {
 	val  T
@@ -21,7 +24,7 @@ func NewUnsafeStack[T any]() *UnsafeStack[T] {
 
 func (st *UnsafeStack[T]) Push(elem T) error {
 	if st == nil {
-		return ErrorNilPointer
+		return stack.ErrorNilPointer
 	}
 
 	if st.top == nil {
@@ -36,11 +39,11 @@ func (st *UnsafeStack[T]) Push(elem T) error {
 func (st *UnsafeStack[T]) Pop() (T, error) {
 	var elem T
 	if st == nil {
-		return elem, ErrorNilPointer
+		return elem, stack.ErrorNilPointer
 	}
 
 	if st.top == nil {
-		return elem, ErrorEmptyStack
+		return elem, stack.ErrorEmptyStack
 	} else {
 		elem = st.top.val
 		st.top = st.top.next
@@ -51,11 +54,11 @@ func (st *UnsafeStack[T]) Pop() (T, error) {
 func (st *UnsafeStack[T]) Top() (T, error) {
 	var elem T
 	if st == nil {
-		return elem, ErrorNilPointer
+		return elem, stack.ErrorNilPointer
 	} else {
 		top := st.top
 		if top == nil {
-			return elem, ErrorEmptyStack
+			return elem, stack.ErrorEmptyStack
 		} else {
 			return top.val, nil
 		}

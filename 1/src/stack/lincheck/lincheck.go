@@ -290,7 +290,6 @@ func (c *Checker) RunCheck(num int) error {
 				}
 			}
 			var errMsg string
-			fmt.Printf("%+v %+v\n", passTimeout, passCheck)
 			switch {
 			case !passTimeout:
 				errMsg = "timeout was reached. Trace of execution:"
