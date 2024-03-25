@@ -147,17 +147,18 @@ func (th *thread) clean() {
 
 type Checker struct {
 	threads []*thread
-	st      stack.Stack[int]
+	sts     []stack.Stack[int]
 	timeout time.Duration
 }
 
-func MakeChecker(st stack.Stack[int], threadNum int, threadSize int, randSeed int64, timeout time.Duration) Checker {
+func MakeChecker(sts []stack.Stack[int], threadSize int, randSeed int64, timeout time.Duration) Checker {
 	randGen := rand.New(rand.NewSource(randSeed))
+	threadNum := len(sts)
 	threads := make([]*thread, threadNum)
 	for i := 0; i < threadNum; i++ {
 		threads[i] = newThread(threadSize, randGen)
 	}
-	return Checker{threads: threads, st: st, timeout: timeout}
+	return Checker{threads: threads, sts: sts, timeout: timeout}
 }
 
 func (c *Checker) run(timeout time.Duration) (bool, []int) {
@@ -165,7 +166,7 @@ func (c *Checker) run(timeout time.Duration) (bool, []int) {
 	randevu.Add(len(c.threads))
 	isTimeEnd := make(chan bool, len(c.threads))
 
-	for _, th := range c.threads {
+	for i, th := range c.threads {
 		th.clean()
 		go func() {
 			ended := make(chan bool, 1)
@@ -173,7 +174,7 @@ func (c *Checker) run(timeout time.Duration) (bool, []int) {
 			randevu.Wait()
 
 			go func() {
-				th.execute(c.st)
+				th.execute(c.sts[i])
 				ended <- true
 			}()
 			select {
@@ -217,7 +218,7 @@ func (c *Checker) checkStep(thread_exe *[]int) (bool, []int) {
 		if num == len(c.threads[i].events) {
 			end += 1
 		} else {
-			if c.threads[i].events[num].check(c.st) {
+			if c.threads[i].events[num].check(c.sts[0]) {
 				(*thread_exe)[i] = num + 1
 				v, arr := c.checkStep(thread_exe)
 				(*thread_exe)[i] = num
@@ -229,7 +230,7 @@ func (c *Checker) checkStep(thread_exe *[]int) (bool, []int) {
 					find = true
 				}
 			}
-			c.threads[i].events[num].rollback(c.st)
+			c.threads[i].events[num].rollback(c.sts[0])
 		}
 		if find {
 			break
@@ -250,17 +251,17 @@ func (c *Checker) check() (bool, []int) {
 	return c.checkStep(&thread_exe)
 }
 
-func emptyStack[T any](st stack.Stack[T]) {
+func emptyStacks[T any](sts []stack.Stack[T]) {
 	var err error
 	err = nil
-	for err == nil {
-		_, err = st.Pop()
-	}
+	for _, st := range sts {
+		for err == nil {
+			_, err = st.Pop()
+		}
 
-	if errors.Is(err, stack.ErrorEmptyStack) {
-		return
-	} else {
-		log.Fatal(err)
+		if !errors.Is(err, stack.ErrorEmptyStack) {
+			log.Fatal(err)
+		}
 	}
 }
 
@@ -269,10 +270,10 @@ func (c *Checker) RunCheck(num int) error {
 	var passCheck, passTimeout bool
 	var failSteps []int
 	for i := 1; i <= num; i++ {
-		emptyStack(c.st)
+		emptyStacks(c.sts)
 		passTimeout, failSteps = c.run(c.timeout)
 		if passTimeout {
-			emptyStack(c.st)
+			emptyStacks(c.sts)
 			passCheck, failSteps = c.check()
 		}
 
