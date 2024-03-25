@@ -6,6 +6,9 @@ import (
 	"testing"
 )
 
+const opsCount = 10000
+const goroutinesCount = 1000
+
 func stackWorkload(st stack.Stack[int], opsCount int) {
 	for i := 0; i < opsCount; i++ {
 		switch rand.Intn(3) {
@@ -19,11 +22,22 @@ func stackWorkload(st stack.Stack[int], opsCount int) {
 	}
 }
 
-func TestRace(t *testing.T) {
-	opsCount := 10000
-	goroutinesCount := 1000
+func TestRaceCommon(t *testing.T) {
 	st := NewCommonStack[int]()
 	for i := 0; i < goroutinesCount; i++ {
+		go stackWorkload(st, opsCount)
+	}
+
+}
+
+func TestRaceEliminate(t *testing.T) {
+	stm := NewEliminateStackManager[int](goroutinesCount)
+
+	for i := 0; i < goroutinesCount; i++ {
+		st, err := stm.GetStackForNewThread()
+		if err != nil {
+			t.Error(err.Error())
+		}
 		go stackWorkload(st, opsCount)
 	}
 

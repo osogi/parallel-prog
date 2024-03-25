@@ -212,10 +212,11 @@ func (loc_st *EliminateStack[T]) launchOp(inf *threadInfo[T]) (T, error) {
 
 		// if found smth to collide with
 		if him != EMPTY_COLLISION {
+			loc_st.hitCollision()
 			hisInf := st.threads[him].Load()
 			//          | not already collided | reverse op
 			if hisInf != nil && uint32(hisInf.id) == him && hisInf.op+inf.op == PUSH+POP {
-				if loc_st.isCollided(inf) {
+				if !loc_st.isCollided(inf) {
 					succ, elem := loc_st.tryCollision(inf, hisInf)
 					if succ {
 						return elem, nil
@@ -226,13 +227,18 @@ func (loc_st *EliminateStack[T]) launchOp(inf *threadInfo[T]) (T, error) {
 					return loc_st.finishCollision(inf), nil
 				}
 			}
+		} else {
+			loc_st.skipCollision()
 		}
 
 		// try wait until smbdy will try collide with us
 		time.Sleep(loc_st.spin)
 
-		if !loc_st.isCollided(inf) {
+		if loc_st.isCollided(inf) {
+			loc_st.timeHitCollision()
 			return loc_st.finishCollision(inf), nil
+		} else {
+			loc_st.timeSkipCollision()
 		}
 
 	}
@@ -242,7 +248,7 @@ func (loc_st *EliminateStack[T]) launchOp(inf *threadInfo[T]) (T, error) {
 // check is thread already collided, if not will remove it from pool
 func (loc_st *EliminateStack[T]) isCollided(inf *threadInfo[T]) bool {
 	st := loc_st.manager
-	return st.threads[loc_st.threadId].CompareAndSwap(inf, nil)
+	return !st.threads[loc_st.threadId].CompareAndSwap(inf, nil)
 }
 
 // need if was pop and push eliminate it
@@ -269,7 +275,7 @@ func (loc_st *EliminateStack[T]) tryCollision(selfInf *threadInfo[T], hisInf *th
 		}
 	case POP:
 		if st.threads[hisInf.id].CompareAndSwap(hisInf, nil) {
-			elem = st.threads[hisInf.id].Load().elem
+			elem = hisInf.elem
 			st.threads[selfInf.id].Store(nil)
 			return true, elem
 		} else { // already eliminated
@@ -281,9 +287,53 @@ func (loc_st *EliminateStack[T]) tryCollision(selfInf *threadInfo[T], hisInf *th
 
 }
 
+// functions for dynamic change of spin and factor value
+func (loc_st *EliminateStack[T]) skipCollision() {
+	loc_st.factorCounter += 1
+	if loc_st.factorCounter >= factorCounterMax {
+		loc_st.factorCounter = 1
+		loc_st.factor /= 2
+		loc_st.factor = max(0.0000001, loc_st.factor)
+	}
+}
+
+func (loc_st *EliminateStack[T]) hitCollision() {
+	loc_st.factorCounter -= 1
+	if loc_st.factorCounter <= 0 {
+		loc_st.factorCounter = factorCounterMax - 1
+		loc_st.factor *= 2
+		loc_st.factor = min(1, loc_st.factor)
+	}
+}
+
+func (loc_st *EliminateStack[T]) timeSkipCollision() {
+	loc_st.spinCounter += 1
+	if loc_st.spinCounter >= spinCounterMax {
+		loc_st.spinCounter = 1
+		loc_st.spin *= 2
+		loc_st.spin = min(spinMax, loc_st.spin)
+	}
+}
+
+func (loc_st *EliminateStack[T]) timeHitCollision() {
+	loc_st.spinCounter -= 1
+	if loc_st.spinCounter <= 0 {
+		loc_st.spinCounter = spinCounterMax - 1
+		loc_st.spin /= 2
+		loc_st.spin = max(spinMin, loc_st.spin)
+	}
+}
+
 func (loc_st *EliminateStack[T]) getPosition() uint {
+	var res uint
 	m := int(loc_st.factor * float32(len(loc_st.manager.collisions)))
-	return uint(rand.Intn(m))
+	m = min(m, len(loc_st.manager.collisions))
+	if m != 0 {
+		res = uint(rand.Intn(m))
+	} else {
+		res = 0
+	}
+	return res
 }
 
 func (loc_st *EliminateStack[T]) Stringify() string {
