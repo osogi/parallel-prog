@@ -2,10 +2,15 @@ name: Tests-1
 
 on:
   push:
-    branches: [ "main" ]
-    paths: [ "1/src/**", ".github/workflows/test-1.yml" ]
+    branches:
+      - master
+    paths: 
+      - 1/src/**
+      - .github/workflows/test-1.yml
   pull_request:
-    paths: [ "1/src/**", ".github/workflows/test-1.yml" ]
+    paths:  
+      - 1/src/**
+      - .github/workflows/test-1.yml
 
 jobs:
 
