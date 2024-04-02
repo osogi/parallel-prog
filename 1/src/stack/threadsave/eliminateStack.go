@@ -9,12 +9,12 @@ import (
 	"time"
 )
 
-const spinMax = time.Millisecond * 512
-const spinMin = time.Millisecond * 1
-const spinDefault = time.Millisecond * 64
+const spinMax = time.Millisecond * 10
+const spinMin = time.Nanosecond * 1
+const spinDefault = time.Microsecond * 1
 
 const spinCounterMax = 8
-const factorCounterMax = 8
+const factorCounterMax = 4
 
 const EMPTY_COLLISION = uint32(0xffffffff)
 
@@ -67,7 +67,7 @@ func NewEliminateStackManager[T any](maxThreads uint) *EliminateStackManager[T] 
 
 func (esm *EliminateStackManager[T]) GetStackForNewThread() (*EliminateStack[T], error) {
 	es := &EliminateStack[T]{spin: spinDefault, spinCounter: spinCounterMax / 2,
-		factor: 0.5, factorCounter: factorCounterMax / 2}
+		factor: 0.1, factorCounter: factorCounterMax / 2}
 	if esm.numThreads < esm.maxThreads {
 		es.manager = esm
 		es.threadId = esm.numThreads
@@ -265,7 +265,6 @@ func (loc_st *EliminateStack[T]) finishCollision(inf *threadInfo[T]) T {
 func (loc_st *EliminateStack[T]) tryCollision(selfInf *threadInfo[T], hisInf *threadInfo[T]) (bool, T) {
 	var elem T
 	st := loc_st.manager
-
 	switch selfInf.op {
 	case PUSH:
 		if st.threads[hisInf.id].CompareAndSwap(hisInf, selfInf) {
@@ -293,7 +292,7 @@ func (loc_st *EliminateStack[T]) skipCollision() {
 	if loc_st.factorCounter >= factorCounterMax {
 		loc_st.factorCounter = 1
 		loc_st.factor /= 2
-		loc_st.factor = max(0.0000001, loc_st.factor)
+		loc_st.factor = max(0.000000001, loc_st.factor)
 	}
 }
 
@@ -333,6 +332,9 @@ func (loc_st *EliminateStack[T]) getPosition() uint {
 	} else {
 		res = 0
 	}
+
+	//fmt.Printf("[%v]\n", loc_st.spin)
+	//fmt.Printf("[%d/%d]\n", res, m)
 	return res
 }
 
