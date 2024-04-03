@@ -1,0 +1,20 @@
+==================
+WARNING: ThreadSanitizer: data race (pid=328905)
+  Write of size 4 at 0x000000f967d0 by thread T1 (mutexes: write M10):
+    #0 connection_handler(void*) <null> (sanit_server.elf+0x4b468b)
+
+  Previous write of size 4 at 0x000000f967d0 by main thread:
+    #0 main <null> (sanit_server.elf+0x4b4420)
+
+  Location is global 'connection' of size 4 at 0x000000f967d0 (sanit_server.elf+0x000000f967d0)
+
+  Mutex M10 (0x000000f967a8) created at:
+    #0 pthread_mutex_lock <null> (sanit_server.elf+0x441e86)
+    #1 connection_handler(void*) <null> (sanit_server.elf+0x4b466c)
+
+  Thread T1 (tid=329145, running) created by main thread at:
+    #0 pthread_create <null> (sanit_server.elf+0x424abb)
+    #1 main <null> (sanit_server.elf+0x4b43b2)
+
+SUMMARY: ThreadSanitizer: data race (/home/user1/github/university/parallel-prog/2/networking/sanit_server.elf+0x4b468b) in connection_handler(void*)
+==================
