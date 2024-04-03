@@ -145,6 +145,8 @@ void *connection_handler(void *sock_fd) {
     pthread_mutex_unlock(&connection_mutex);
    
     printf("[INFO] THREAD TERMINATED\n");
+
+	printf("[DEBUG] CONNECTION LIVE: %d\n", connection);
     
     end = clock();
     double time_taken = (double)(end - start) / CLOCKS_PER_SEC;

@@ -1,11 +1,17 @@
-all: server.elf client.elf
+all: server.elf client.elf sanit_server.elf
 .PHONY: clean
 
+CPP = clang++
+
+
 server.elf: server.cpp Makefile
-	g++ server.cpp -o server.elf -pthread
+	$(CPP) server.cpp -o server.elf -pthread
 
 client.elf: client.cpp Makefile
-	g++ client.cpp -o client.elf
+	$(CPP) client.cpp -o client.elf
+
+sanit_server.elf: server.cpp Makefile
+	$(CPP) server.cpp -fsanitize=thread -o sanit_server.elf -pthread 
 
 clean:
-	rm -f client.elf server.elf
+	rm -f client.elf server.elf sanit_server.elf
