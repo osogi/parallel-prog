@@ -1,3 +1,6 @@
+// This is exact copy of Hallo Weeks's client 
+// https://github.com/halloweeks/networking/tree/main
+
 #include <iostream>
 #include <sys/socket.h>
 #include <arpa/inet.h>
