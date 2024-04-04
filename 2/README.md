@@ -57,3 +57,50 @@ https://github.com/halloweeks/networking/tree/main
 ```
 
 ## Своя гонка данных
+
+Сервер бы переписан под сервер любителей животных. В MVP этого продукта можно:
+- вести свой профиль: указывать любишь ты кошек и собак
+- смотреть чужие профили и оценивать их. Можно узнать
+	- любит ли человек кошек и собак
+	- и понравился ли этот профиль последнему посетившему
+
+Код нового сервера можно найти в [папке](./my-networking), а в этом [коммите](https://github.com/osogi/parallel-prog/commit/3b44c94c5a282124740c268db3af430135079d3b) посмотреть внесённые изменения.
+
+Основная интересность этой гонки данных в том, что если рассматривать переменные `love_dogs`, `love_cats` и `liked_by_last_visiter`, как независимые, то её не будет. Но все эти переменные хранятся в одном и том же байте, тем самым они влияют друг на друга (по крайней мере на моей машине с моим компилятором с указанными в makefile флагами), следовательно, на них всех должен быть общий мьютекс, а не отдельные как в представленной реализации. Либо стоит их разбить по отдельным байтам.
+
+```c
+struct profile_t {
+    unsigned char love_dogs : 1, 
+                  love_cats : 1, 
+                  liked_by_last_visiter : 1;
+};
+```
+
+### Результаты анализа
+#### Санитайзер
+
+Санитайзер не нашёл этот race condition, возможно дело в том что он рассматривает перечисленные выше переменные как независимые.
+
+#### Helgrind
+
+Helgrind обнаружил эту ошибку вот часть [лога](./my-helgrind.out.txt), где он сообщает о ней.
+
+```
+==396433== Possible data race during write of size 1 at 0x4DF60C0 by thread #2
+==396433== Locks held: 1, at address 0x5253E88
+==396433==    at 0x402163: user_t::set_love(int, int) (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==396433==    by 0x401A80: connection_handler(void*) (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==396433==    by 0x4842B1A: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==396433==    by 0x4BD2608: start_thread (pthread_create.c:477)
+==396433==    by 0x4D0C352: clone (clone.S:95)
+==396433== 
+==396433== This conflicts with a previous write of size 1 by thread #3
+==396433== Locks held: 1, at address 0x5253EC0
+==396433==    at 0x402303: user_t::set_last_liked(int) (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==396433==    by 0x401BC2: connection_handler(void*) (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==396433==    by 0x4842B1A: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==396433==    by 0x4BD2608: start_thread (pthread_create.c:477)
+==396433==    by 0x4D0C352: clone (clone.S:95)
+```
+
+Если убрать задания битового размера полей, тем самым сделать переменные независимыми, то как и ожидается helgrind не будет находить этот race condition (так как он невозможен). [Лог подтверждающий это](./my-helgrind.without-bits.out.txt) (он непустой, так как helgrind'у до сих пор не нравится printf и то что сервер пишет из разных потоков).

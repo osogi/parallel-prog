@@ -1,0 +1,196 @@
+==399257== Helgrind, a thread error detector
+==399257== Copyright (C) 2007-2017, and GNU GPL'd, by OpenWorks LLP et al.
+==399257== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==399257== Command: ./server.elf
+==399257== Parent PID: 94663
+==399257== 
+==399257== ---Thread-Announcement------------------------------------------
+==399257== 
+==399257== Thread #2 was created
+==399257==    at 0x4D0C342: clone (clone.S:71)
+==399257==    by 0x4BD12EB: create_thread (createthread.c:101)
+==399257==    by 0x4BD2E0F: pthread_create@@GLIBC_2.2.5 (pthread_create.c:817)
+==399257==    by 0x4842917: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4017FD: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257== 
+==399257== ---Thread-Announcement------------------------------------------
+==399257== 
+==399257== Thread #1 is the program's root thread
+==399257== 
+==399257== ----------------------------------------------------------------
+==399257== 
+==399257==  Lock at 0x4071E0 was first observed
+==399257==    at 0x483FEDF: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x40171E: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==  Address 0x4071e0 is 0 bytes inside data symbol "connection_mutex"
+==399257== 
+==399257== Possible data race during write of size 1 at 0x4DF5C8A by thread #2
+==399257== Locks held: none
+==399257==    at 0x48488A6: mempcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4C7C631: _IO_new_file_xsputn (fileops.c:1236)
+==399257==    by 0x4C7C631: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==399257==    by 0x4C63971: __vfprintf_internal (vfprintf-internal.c:1373)
+==399257==    by 0x4C4ED3E: printf (printf.c:33)
+==399257==    by 0x40198E: connection_handler(void*) (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==    by 0x4842B1A: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4BD2608: start_thread (pthread_create.c:477)
+==399257==    by 0x4D0C352: clone (clone.S:95)
+==399257== 
+==399257== This conflicts with a previous write of size 1 by thread #1
+==399257== Locks held: 1, at address 0x4071E0
+==399257==    at 0x48488A6: mempcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4C7C631: _IO_new_file_xsputn (fileops.c:1236)
+==399257==    by 0x4C7C631: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==399257==    by 0x4C63971: __vfprintf_internal (vfprintf-internal.c:1373)
+==399257==    by 0x4C4ED3E: printf (printf.c:33)
+==399257==    by 0x401850: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==  Address 0x4df5c8a is 10 bytes inside a block of size 1,024 alloc'd
+==399257==    at 0x483C893: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4C6ED03: _IO_file_doallocate (filedoalloc.c:101)
+==399257==    by 0x4C7EECF: _IO_doallocbuf (genops.c:347)
+==399257==    by 0x4C7DF2F: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:745)
+==399257==    by 0x4C7C6B4: _IO_new_file_xsputn (fileops.c:1244)
+==399257==    by 0x4C7C6B4: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==399257==    by 0x4C63971: __vfprintf_internal (vfprintf-internal.c:1373)
+==399257==    by 0x4C4ED3E: printf (printf.c:33)
+==399257==    by 0x4015EB: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==  Block was alloc'd by thread #1
+==399257== 
+==399257== ----------------------------------------------------------------
+==399257== 
+==399257==  Lock at 0x4071E0 was first observed
+==399257==    at 0x483FEDF: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x40171E: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==  Address 0x4071e0 is 0 bytes inside data symbol "connection_mutex"
+==399257== 
+==399257== Possible data race during write of size 1 at 0x4DF5C8B by thread #2
+==399257== Locks held: none
+==399257==    at 0x48488CC: mempcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4C7C631: _IO_new_file_xsputn (fileops.c:1236)
+==399257==    by 0x4C7C631: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==399257==    by 0x4C640FB: __vfprintf_internal (vfprintf-internal.c:1688)
+==399257==    by 0x4C4ED3E: printf (printf.c:33)
+==399257==    by 0x40198E: connection_handler(void*) (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==    by 0x4842B1A: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4BD2608: start_thread (pthread_create.c:477)
+==399257==    by 0x4D0C352: clone (clone.S:95)
+==399257== 
+==399257== This conflicts with a previous write of size 1 by thread #1
+==399257== Locks held: 1, at address 0x4071E0
+==399257==    at 0x48488A6: mempcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4C7C631: _IO_new_file_xsputn (fileops.c:1236)
+==399257==    by 0x4C7C631: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==399257==    by 0x4C63971: __vfprintf_internal (vfprintf-internal.c:1373)
+==399257==    by 0x4C4ED3E: printf (printf.c:33)
+==399257==    by 0x401850: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==  Address 0x4df5c8b is 11 bytes inside a block of size 1,024 alloc'd
+==399257==    at 0x483C893: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4C6ED03: _IO_file_doallocate (filedoalloc.c:101)
+==399257==    by 0x4C7EECF: _IO_doallocbuf (genops.c:347)
+==399257==    by 0x4C7DF2F: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:745)
+==399257==    by 0x4C7C6B4: _IO_new_file_xsputn (fileops.c:1244)
+==399257==    by 0x4C7C6B4: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==399257==    by 0x4C63971: __vfprintf_internal (vfprintf-internal.c:1373)
+==399257==    by 0x4C4ED3E: printf (printf.c:33)
+==399257==    by 0x4015EB: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==  Block was alloc'd by thread #1
+==399257== 
+==399257== ----------------------------------------------------------------
+==399257== 
+==399257==  Lock at 0x4071E0 was first observed
+==399257==    at 0x483FEDF: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x40171E: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==  Address 0x4071e0 is 0 bytes inside data symbol "connection_mutex"
+==399257== 
+==399257== Possible data race during write of size 1 at 0x4DF5C8E by thread #2
+==399257== Locks held: none
+==399257==    at 0x48488A6: mempcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4C7C631: _IO_new_file_xsputn (fileops.c:1236)
+==399257==    by 0x4C7C631: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==399257==    by 0x4C63FE5: __vfprintf_internal (vfprintf-internal.c:1719)
+==399257==    by 0x4C4ED3E: printf (printf.c:33)
+==399257==    by 0x40198E: connection_handler(void*) (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==    by 0x4842B1A: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4BD2608: start_thread (pthread_create.c:477)
+==399257==    by 0x4D0C352: clone (clone.S:95)
+==399257== 
+==399257== This conflicts with a previous write of size 1 by thread #1
+==399257== Locks held: 1, at address 0x4071E0
+==399257==    at 0x48488A6: mempcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4C7C631: _IO_new_file_xsputn (fileops.c:1236)
+==399257==    by 0x4C7C631: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==399257==    by 0x4C63971: __vfprintf_internal (vfprintf-internal.c:1373)
+==399257==    by 0x4C4ED3E: printf (printf.c:33)
+==399257==    by 0x401850: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==  Address 0x4df5c8e is 14 bytes inside a block of size 1,024 alloc'd
+==399257==    at 0x483C893: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4C6ED03: _IO_file_doallocate (filedoalloc.c:101)
+==399257==    by 0x4C7EECF: _IO_doallocbuf (genops.c:347)
+==399257==    by 0x4C7DF2F: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:745)
+==399257==    by 0x4C7C6B4: _IO_new_file_xsputn (fileops.c:1244)
+==399257==    by 0x4C7C6B4: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==399257==    by 0x4C63971: __vfprintf_internal (vfprintf-internal.c:1373)
+==399257==    by 0x4C4ED3E: printf (printf.c:33)
+==399257==    by 0x4015EB: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==  Block was alloc'd by thread #1
+==399257== 
+==399257== ---Thread-Announcement------------------------------------------
+==399257== 
+==399257== Thread #3 was created
+==399257==    at 0x4D0C342: clone (clone.S:71)
+==399257==    by 0x4BD12EB: create_thread (createthread.c:101)
+==399257==    by 0x4BD2E0F: pthread_create@@GLIBC_2.2.5 (pthread_create.c:817)
+==399257==    by 0x4842917: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4017FD: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257== 
+==399257== ----------------------------------------------------------------
+==399257== 
+==399257==  Lock at 0x4071E0 was first observed
+==399257==    at 0x483FEDF: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x40171E: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==  Address 0x4071e0 is 0 bytes inside data symbol "connection_mutex"
+==399257== 
+==399257== Possible data race during write of size 1 at 0x4DF5C99 by thread #3
+==399257== Locks held: 1, at address 0x4071E0
+==399257==    at 0x48488CC: mempcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4C7C631: _IO_new_file_xsputn (fileops.c:1236)
+==399257==    by 0x4C7C631: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==399257==    by 0x4C647AC: __vfprintf_internal (vfprintf-internal.c:1687)
+==399257==    by 0x4C4ED3E: printf (printf.c:33)
+==399257==    by 0x401DF4: connection_handler(void*) (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==    by 0x4842B1A: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4BD2608: start_thread (pthread_create.c:477)
+==399257==    by 0x4D0C352: clone (clone.S:95)
+==399257== 
+==399257== This conflicts with a previous write of size 1 by thread #2
+==399257== Locks held: none
+==399257==    at 0x48488CC: mempcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4C7C631: _IO_new_file_xsputn (fileops.c:1236)
+==399257==    by 0x4C7C631: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==399257==    by 0x4C640FB: __vfprintf_internal (vfprintf-internal.c:1688)
+==399257==    by 0x4C4ED3E: printf (printf.c:33)
+==399257==    by 0x401D54: connection_handler(void*) (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==    by 0x4842B1A: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4BD2608: start_thread (pthread_create.c:477)
+==399257==    by 0x4D0C352: clone (clone.S:95)
+==399257==  Address 0x4df5c99 is 25 bytes inside a block of size 1,024 alloc'd
+==399257==    at 0x483C893: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)
+==399257==    by 0x4C6ED03: _IO_file_doallocate (filedoalloc.c:101)
+==399257==    by 0x4C7EECF: _IO_doallocbuf (genops.c:347)
+==399257==    by 0x4C7DF2F: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:745)
+==399257==    by 0x4C7C6B4: _IO_new_file_xsputn (fileops.c:1244)
+==399257==    by 0x4C7C6B4: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+==399257==    by 0x4C63971: __vfprintf_internal (vfprintf-internal.c:1373)
+==399257==    by 0x4C4ED3E: printf (printf.c:33)
+==399257==    by 0x4015EB: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257==  Block was alloc'd by thread #1
+==399257== 
+==399257== 
+==399257== Process terminating with default action of signal 2 (SIGINT)
+==399257==    at 0x4BDD4FF: accept (accept.c:26)
+==399257==    by 0x4016EC: main (in /home/user1/github/university/parallel-prog/2/my-networking/server.elf)
+==399257== 
+==399257== Use --history-level=approx or =none to gain increased speed, at
+==399257== the cost of reduced accuracy of conflicting-access information
+==399257== For lists of detected and suppressed errors, rerun with: -s
+==399257== ERROR SUMMARY: 1089 errors from 4 contexts (suppressed: 468 from 98)
