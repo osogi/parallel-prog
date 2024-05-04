@@ -1,6 +1,8 @@
 package btree
 
-import "golang.org/x/exp/constraints"
+import (
+	"golang.org/x/exp/constraints"
+)
 
 type Node[K constraints.Ordered, V any, NT any] interface {
 	GetKey() K

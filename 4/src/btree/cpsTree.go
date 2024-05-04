@@ -1,6 +1,8 @@
 package btree
 
-import "golang.org/x/exp/constraints"
+import (
+	"golang.org/x/exp/constraints"
+)
 
 type CpsTree[K constraints.Ordered, V any, NT Node[K, V, NT]] struct {
 	root NT
@@ -25,12 +27,10 @@ func (t *CpsTree[K, V, NT]) StepFind(cur NT, parent NT, key K, cont func(NT, NT,
 }
 
 func (t *CpsTree[K, V, NT]) StepError(cur NT, parent NT, key K, cont func(NT, NT, NT) error) error {
-	var nilNode NT
-
 	if !cur.IsNil() {
 		curkey := cur.GetKey()
 		if curkey == key {
-			return cont(nilNode, cur, parent)
+			return ErrorSameKey
 		} else if key < curkey {
 			return cont(cur.GetLeft(), cur, parent)
 		} else {
@@ -47,7 +47,7 @@ func (t *CpsTree[K, V, NT]) NodeFind(cur NT, parent NT, key K, preStep func(NT, 
 
 	helper = func(child NT, cur NT, parent NT) (NT, NT) {
 		preStep(child, cur, parent)
-		return t.StepFind(cur, parent, key, helper)
+		return t.StepFind(child, cur, key, helper)
 	}
 
 	return helper(cur, parent, nilNode)
@@ -64,8 +64,7 @@ func (t *CpsTree[K, V, NT]) NodeInsert(cur NT, parent NT, newNode NT, preStep fu
 			preInsert(newNode, cur, parent)
 			if cur.IsNil() {
 				t.root = newNode
-			}
-			if key < cur.GetKey() {
+			} else if key < cur.GetKey() {
 				cur.setLeft(newNode)
 			} else {
 				cur.setRight(newNode)
@@ -73,7 +72,7 @@ func (t *CpsTree[K, V, NT]) NodeInsert(cur NT, parent NT, newNode NT, preStep fu
 			postInsert(newNode, cur, parent)
 			return nil
 		} else {
-			return t.StepError(cur, parent, key, helper)
+			return t.StepError(child, cur, key, helper)
 		}
 	}
 
@@ -127,6 +126,7 @@ func (t *CpsTree[K, V, NT]) DeleteTargetNode(target NT, parent NT, preStep func(
 
 			preDelete(parent, target, ncur)
 			ncur.setRight(target.GetRight())
+			ncur.setLeft(target.GetLeft())
 			t.NodeReplace(parent, target, ncur)
 			postDelete(parent, target, ncur)
 
@@ -148,7 +148,7 @@ func (t *CpsTree[K, V, NT]) NodeDelete(cur NT, parent NT, key K, preStep func(NT
 		if child.GetKey() == key {
 			return t.DeleteTargetNode(child, cur, additionalPreStep, preDelete, postDelete)
 		} else {
-			return t.StepError(cur, parent, key, helper)
+			return t.StepError(child, cur, key, helper)
 		}
 	}
 
