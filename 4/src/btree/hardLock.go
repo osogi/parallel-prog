@@ -17,7 +17,13 @@ func NewHardLockTree[K constraints.Ordered, V any]() *HardLockTree[K, V] {
 }
 
 func emptyFunc[K constraints.Ordered, V any](a *commonNode[K, V], b *commonNode[K, V], c *commonNode[K, V]) {
-	return
+}
+
+func (t *HardLockTree[K, V]) subFind(cur *commonNode[K, V], parent *commonNode[K, V], key K) (*commonNode[K, V], *commonNode[K, V]) {
+	return t.tree.NodeFind(cur, parent, key, emptyFunc)
+}
+func (t *HardLockTree[K, V]) subInsert(cur *commonNode[K, V], parent *commonNode[K, V], newNode *commonNode[K, V]) {
+	t.tree.NodeInsert(cur, parent, newNode, t.subFind)
 }
 
 func (t *HardLockTree[K, V]) Find(key K) (V, error) {
@@ -26,7 +32,7 @@ func (t *HardLockTree[K, V]) Find(key K) (V, error) {
 
 	var nilValue V
 
-	n, _ := t.tree.NodeFind(t.tree.root, nil, key, emptyFunc)
+	n, _ := t.subFind(t.tree.root, nil, key)
 	if n.IsNil() {
 		return nilValue, ErrorNodeNotFound
 	} else {
@@ -39,14 +45,16 @@ func (t *HardLockTree[K, V]) Insert(key K, value V) error {
 	defer t.mutex.Unlock()
 
 	newNode := newCommonNode(key, value)
-	return t.tree.NodeInsert(t.tree.root, nil, newNode, emptyFunc, emptyFunc, emptyFunc)
+	_, _, err := t.tree.NodeInsert(t.tree.root, nil, newNode, t.subFind)
+	return err
 }
 
 func (t *HardLockTree[K, V]) Delete(key K) error {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
-	return t.tree.NodeDelete(t.tree.root, nil, key, emptyFunc, emptyFunc, emptyFunc, emptyFunc)
+	_, _, err := t.tree.NodeDelete(t.tree.root, nil, key, t.subFind, t.subInsert)
+	return err
 }
 
 func (t *HardLockTree[K, V]) Print() {
