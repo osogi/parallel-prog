@@ -42,9 +42,7 @@ func (t *CpsTree[K, V, NT]) StepFind(cur NT, parent NT, key K, cont func(NT, NT,
 
 type findFunType[K any, NT any] func(NT, NT, K) (NT, NT)
 
-func (t *CpsTree[K, V, NT]) NodeFind(cur NT, parent NT, key K, preStep func(NT, NT, NT)) (NT, NT) {
-	var nilNode NT
-
+func (t *CpsTree[K, V, NT]) NodeFind(cur NT, parent NT, grandpar NT, key K, preStep func(NT, NT, NT)) (NT, NT) {
 	var helper (func(NT, NT, NT) (NT, NT))
 
 	helper = func(child NT, cur NT, parent NT) (NT, NT) {
@@ -52,7 +50,7 @@ func (t *CpsTree[K, V, NT]) NodeFind(cur NT, parent NT, key K, preStep func(NT, 
 		return t.StepFind(child, cur, key, helper)
 	}
 
-	return helper(cur, parent, nilNode)
+	return helper(cur, parent, grandpar)
 }
 
 func (t *CpsTree[K, V, NT]) NodeReplace(parent NT, newNode NT) NT {
@@ -68,6 +66,19 @@ func (t *CpsTree[K, V, NT]) NodeReplace(parent NT, newNode NT) NT {
 	return newNode
 }
 
+func (t *CpsTree[K, V, NT]) NodeReplacePrev(parent NT, prev NT, newNode NT) NT {
+	if parent.IsNil() {
+		t.root = newNode
+	} else {
+		if prev.IsEqual(parent.GetLeft()) {
+			parent.setLeft(newNode)
+		} else {
+			parent.setRight(newNode)
+		}
+	}
+	return newNode
+}
+
 func (t *CpsTree[K, V, NT]) NodeInsert(cur NT, parent NT, newNode NT, findFun findFunType[K, NT]) (NT, NT, error) {
 	key := newNode.GetKey()
 	finded, fparent := findFun(cur, parent, key)
@@ -75,7 +86,7 @@ func (t *CpsTree[K, V, NT]) NodeInsert(cur NT, parent NT, newNode NT, findFun fi
 	if !finded.IsNil() {
 		err = ErrorSameKey
 	} else {
-		t.NodeReplace(fparent, newNode)
+		finded = t.NodeReplace(fparent, newNode)
 	}
 	return finded, fparent, err
 }
@@ -111,9 +122,9 @@ func (t *CpsTree[K, V, NT]) ZeroOneChildNodeDelete(target NT, parent NT) NT {
 	tr := target.GetRight()
 
 	if tl.IsNil() {
-		return t.NodeReplace(parent, tr)
+		return t.NodeReplacePrev(parent, target, tr)
 	} else if tr.IsNil() {
-		return t.NodeReplace(parent, tl)
+		return t.NodeReplacePrev(parent, target, tl)
 	}
 	return target
 }
@@ -133,7 +144,7 @@ func (t *CpsTree[K, V, NT]) NodeDelete(cur NT, parent NT, key K, findFun findFun
 			fl := finded.GetLeft()
 			fr := finded.GetRight()
 			insertFun(fl, finded, fr)
-			newChild = t.NodeReplace(fparent, fl)
+			newChild = t.NodeReplacePrev(fparent, finded, fl)
 		}
 	}
 	return newChild, fparent, err

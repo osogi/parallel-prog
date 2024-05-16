@@ -20,7 +20,7 @@ func emptyFunc[K constraints.Ordered, V any](a *commonNode[K, V], b *commonNode[
 }
 
 func (t *HardLockTree[K, V]) subFind(cur *commonNode[K, V], parent *commonNode[K, V], key K) (*commonNode[K, V], *commonNode[K, V]) {
-	return t.tree.NodeFind(cur, parent, key, emptyFunc)
+	return t.tree.NodeFind(cur, parent, nil, key, emptyFunc)
 }
 func (t *HardLockTree[K, V]) subInsert(cur *commonNode[K, V], parent *commonNode[K, V], newNode *commonNode[K, V]) {
 	t.tree.NodeInsert(cur, parent, newNode, t.subFind)
