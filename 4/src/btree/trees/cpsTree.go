@@ -134,22 +134,21 @@ func (t *CpsTree[K, V, NT]) ZeroOneChildNodeDelete(target NT, parent NT) NT {
 func (t *CpsTree[K, V, NT]) NodeDelete(cur NT, parent NT, key K, findFun FindFunType[K, NT], insertFun func(NT, NT, NT)) (NT, NT, error) {
 	finded, fparent := findFun(cur, parent, key)
 	var err error = nil
-	var newChild NT = finded
 
 	if finded.IsNil() {
 		err = btree.ErrorNodeNotFound
 	} else {
-		newChild = t.ZeroOneChildNodeDelete(finded, fparent)
+		newChild := t.ZeroOneChildNodeDelete(finded, fparent)
 		if !newChild.IsEqual(finded) {
 			err = nil
 		} else {
 			fl := finded.GetLeft()
 			fr := finded.GetRight()
 			insertFun(fl, finded, fr)
-			newChild = t.NodeReplacePrev(fparent, finded, fl)
+			t.NodeReplacePrev(fparent, finded, fl)
 		}
 	}
-	return newChild, fparent, err
+	return finded, fparent, err
 }
 
 // func (t *CpsTree[K, V, NT]) DeleteTargetNode(target NT, parent NT, preStep func(NT, NT, NT), preDelete func(NT, NT, NT), postDelete func(NT, NT, NT)) error {

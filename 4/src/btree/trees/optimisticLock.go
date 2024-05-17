@@ -99,20 +99,14 @@ func (extenalTree *OptimisticLockTree[K, V]) insertForDelete(lchild *mutexNode[K
 	t.unlockNode(rchild, false)
 }
 
-//	func (extenalTree *OptimisticLockTree[K, V]) subFindForDelete(cur *mutexNode[K, V], parent *mutexNode[K, V], key K) (*mutexNode[K, V], *mutexNode[K, V]) {
-//		t := extenalTree.mtree
-//		n, par := extenalTree.subFind(cur, parent, key)
-//		t.lockNode(n.GetLeft(), false)
-//		t.lockNode(n.GetRight(), false)
-//		return n, par
-//	}
 func (extenalTree *OptimisticLockTree[K, V]) Delete(key K) error {
 	// fmt.Printf("Delete\n")
 	t := extenalTree.mtree
 
-	_, par, err := t.tree.NodeDelete(t.tree.root, nil, key, extenalTree.subFind, extenalTree.insertForDelete)
+	nd, par, err := t.tree.NodeDelete(t.tree.root, nil, key, extenalTree.subFind, extenalTree.insertForDelete)
 
 	t.unlockNode(par, true)
+	t.unlockNode(nd, false)
 	return err
 }
 
