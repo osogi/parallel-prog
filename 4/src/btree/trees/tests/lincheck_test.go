@@ -5,7 +5,6 @@
 package trees_test
 
 import (
-	"fmt"
 	"math/rand"
 	"parallel-prog/4/btree"
 	"parallel-prog/4/btree/lincheck"
@@ -21,7 +20,7 @@ func RunLincheck(t *testing.T, emptyGen func() btree.Btree[int, int], threadsNum
 		return lincheck.NewSimpleTree[int, int]()
 	}
 	for i := 0; i < diffSeedsNum; i++ {
-		fmt.Println(i)
+		// fmt.Println(i)
 		c := lincheck.MakeChecker(emptyGen, emptyCheck, threadsNum, threadLen, int64(rg.Int()), 5*time.Second)
 		err := c.RunCheck(repeatRunNum)
 		if err != nil {

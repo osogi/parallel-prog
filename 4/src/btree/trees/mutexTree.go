@@ -1,7 +1,6 @@
 package trees
 
 import (
-	"fmt"
 	"sync"
 
 	"golang.org/x/exp/constraints"
@@ -29,17 +28,17 @@ func (t *mutexTree[K, V]) getNodeMutex(cur *mutexNode[K, V], asParent bool) *syn
 }
 
 func (t *mutexTree[K, V]) lockNode(cur *mutexNode[K, V], asParent bool) {
-	str := ""
-	if cur == nil {
-		if asParent {
-			str = "tree"
-		} else {
-			str = "<nil>"
-		}
-	} else {
-		str = fmt.Sprintf("[%v]", cur.GetKey())
-	}
-	fmt.Printf("[+]: %v\n", str)
+	// str := ""
+	// if cur == nil {
+	// 	if asParent {
+	// 		str = "tree"
+	// 	} else {
+	// 		str = "<nil>"
+	// 	}
+	// } else {
+	// 	str = fmt.Sprintf("[%v]", cur.GetKey())
+	// }
+	// fmt.Printf("[+]: %v\n", str)
 	mut := t.getNodeMutex(cur, asParent)
 	if mut != nil {
 		mut.Lock()
@@ -47,17 +46,17 @@ func (t *mutexTree[K, V]) lockNode(cur *mutexNode[K, V], asParent bool) {
 }
 
 func (t *mutexTree[K, V]) unlockNode(cur *mutexNode[K, V], asParent bool) {
-	str := ""
-	if cur == nil {
-		if asParent {
-			str = "tree"
-		} else {
-			str = "<nil>"
-		}
-	} else {
-		str = fmt.Sprintf("[%v]", cur.GetKey())
-	}
-	fmt.Printf("[ ]: %v\n", str)
+	// str := ""
+	// if cur == nil {
+	// 	if asParent {
+	// 		str = "tree"
+	// 	} else {
+	// 		str = "<nil>"
+	// 	}
+	// } else {
+	// 	str = fmt.Sprintf("[%v]", cur.GetKey())
+	// }
+	// fmt.Printf("[ ]: %v\n", str)
 	mut := t.getNodeMutex(cur, asParent)
 	if mut != nil {
 		mut.Unlock()

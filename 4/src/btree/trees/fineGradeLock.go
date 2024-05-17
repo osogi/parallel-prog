@@ -18,7 +18,6 @@ func NewFineGradeLockTree[K constraints.Ordered, V any]() *FineGradeLockTree[K, 
 
 func (extenalTree *FineGradeLockTree[K, V]) subFind(cur *mutexNode[K, V], parent *mutexNode[K, V], key K) (*mutexNode[K, V], *mutexNode[K, V]) {
 	t := extenalTree.mtree
-	t.lockNode(parent, true)
 
 	preStep := func(cur *mutexNode[K, V], parent *mutexNode[K, V], grandpar *mutexNode[K, V]) {
 		t.lockNode(cur, false)
@@ -33,9 +32,10 @@ func (extenalTree *FineGradeLockTree[K, V]) subFind(cur *mutexNode[K, V], parent
 }
 
 func (extenalTree *FineGradeLockTree[K, V]) Find(key K) (V, error) {
+	// fmt.Printf("Find\n")
 	t := extenalTree.mtree
 	var nilValue V
-
+	t.lockNode(nil, true)
 	n, par := extenalTree.subFind(t.tree.root, nil, key)
 	defer t.unlockNode(n, false)
 	defer t.unlockNode(par, true)
@@ -48,11 +48,13 @@ func (extenalTree *FineGradeLockTree[K, V]) Find(key K) (V, error) {
 }
 
 func (extenalTree *FineGradeLockTree[K, V]) Insert(key K, value V) error {
-	fmt.Printf("Insert\n")
+	// fmt.Printf("Insert\n")
 	t := extenalTree.mtree
 
 	newNode := newMutexNode(key, value)
 	t.lockNode(newNode, false)
+
+	t.lockNode(nil, true)
 	n, par, err := t.tree.NodeInsert(t.tree.root, nil, newNode, extenalTree.subFind)
 
 	t.unlockNode(n, false)
@@ -94,9 +96,10 @@ func (extenalTree *FineGradeLockTree[K, V]) insertForDelete(lchild *mutexNode[K,
 }
 
 func (extenalTree *FineGradeLockTree[K, V]) Delete(key K) error {
-	fmt.Printf("Delete\n")
+	// fmt.Printf("Delete\n")
 	t := extenalTree.mtree
 
+	t.lockNode(nil, true)
 	_, par, err := t.tree.NodeDelete(t.tree.root, nil, key, extenalTree.subFind, extenalTree.insertForDelete)
 
 	t.unlockNode(par, true)
