@@ -24,17 +24,15 @@ const threadLen = 3
 func TestLincheck(t *testing.T) {
 	rg := rand.New(rand.NewSource(seed))
 
-	gen := trees.NewNoLockTree[int, int]()
 	emptyGen := func() btree.Btree[int, int] {
 		return trees.NewNoLockTree[int, int]()
 	}
 
-	checker := lincheck.NewSimpleTree[int, int]()
 	emptyCheck := func() btree.Btree[int, int] {
 		return lincheck.NewSimpleTree[int, int]()
 	}
 	for i := 0; i < diffSeedsNum; i++ {
-		c := lincheck.MakeChecker(gen, emptyGen, checker, emptyCheck, threadsNum, threadLen, int64(rg.Int()), 5*time.Second)
+		c := lincheck.MakeChecker(emptyGen, emptyCheck, threadsNum, threadLen, int64(rg.Int()), 5*time.Second)
 		trace := c.RunCheck(repeatRunNum)
 		if trace != nil {
 			fmt.Print(trace)

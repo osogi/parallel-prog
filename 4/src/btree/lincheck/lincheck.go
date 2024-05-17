@@ -156,13 +156,13 @@ type Checker struct {
 	emptyGenerateTree func() btree.Btree[int, int]
 }
 
-func MakeChecker(generateTree btree.Btree[int, int], emptyGenerateTree func() btree.Btree[int, int], checkTree btree.Btree[int, int], emptyCheckTree func() btree.Btree[int, int], threadNum int, threadSize int, randSeed int64, timeout time.Duration) Checker {
+func MakeChecker(emptyGenerateTree func() btree.Btree[int, int], emptyCheckTree func() btree.Btree[int, int], threadNum int, threadSize int, randSeed int64, timeout time.Duration) Checker {
 	randGen := rand.New(rand.NewSource(randSeed))
 	threads := make([]*thread, threadNum)
 	for i := 0; i < threadNum; i++ {
 		threads[i] = newThread(threadSize, randGen)
 	}
-	return Checker{threads: threads, generateTree: generateTree, checkTree: checkTree, timeout: timeout, emptyCheckTree: emptyCheckTree, emptyGenerateTree: emptyGenerateTree}
+	return Checker{threads: threads, timeout: timeout, emptyCheckTree: emptyCheckTree, emptyGenerateTree: emptyGenerateTree}
 }
 
 func (c *Checker) run(timeout time.Duration) (bool, []int) {
