@@ -44,6 +44,13 @@ func RunLincheckFineGrade(t *testing.T, threadsNum int, threadLen int, seed int6
 	RunLincheck(t, emptyGen, threadsNum, threadLen, seed, diffSeedsNum, repeatRunNum)
 }
 
+func RunLincheckOptimistic(t *testing.T, threadsNum int, threadLen int, seed int64, diffSeedsNum int, repeatRunNum int) {
+	emptyGen := func() btree.Btree[int, int] {
+		return trees.NewOptimisticLockTree[int, int]()
+	}
+	RunLincheck(t, emptyGen, threadsNum, threadLen, seed, diffSeedsNum, repeatRunNum)
+}
+
 func TestLincheckHard_5threads_3ops(t *testing.T) {
 	RunLincheckHard(t, 5, 3, 0xaaaa, 100, 10)
 }
@@ -58,4 +65,16 @@ func TestLincheckFineGrade_3threads_7ops(t *testing.T) {
 
 func TestLincheckFineGrade_2threads_20ops(t *testing.T) {
 	RunLincheckFineGrade(t, 2, 20, 0xaaaa, 100, 10)
+}
+
+func TestLincheckOptimistic_5threads_3ops(t *testing.T) {
+	RunLincheckOptimistic(t, 5, 3, 0xaaaa, 100, 10)
+}
+
+func TestLincheckOptimistic_3threads_7ops(t *testing.T) {
+	RunLincheckOptimistic(t, 3, 7, 0xaaaa, 100, 10)
+}
+
+func TestLincheckOptimistic_2threads_20ops(t *testing.T) {
+	RunLincheckOptimistic(t, 2, 20, 0xaaaa, 100, 10)
 }
