@@ -1,6 +1,8 @@
-package btree
+package trees
 
 import (
+	"parallel-prog/4/btree"
+
 	"golang.org/x/exp/constraints"
 )
 
@@ -40,7 +42,7 @@ func (t *CpsTree[K, V, NT]) StepFind(cur NT, parent NT, key K, cont func(NT, NT,
 // 	return ErrorNilNode
 // }
 
-type findFunType[K any, NT any] func(NT, NT, K) (NT, NT)
+type FindFunType[K any, NT any] func(NT, NT, K) (NT, NT)
 
 func (t *CpsTree[K, V, NT]) NodeFind(cur NT, parent NT, grandpar NT, key K, preStep func(NT, NT, NT)) (NT, NT) {
 	var helper (func(NT, NT, NT) (NT, NT))
@@ -79,12 +81,12 @@ func (t *CpsTree[K, V, NT]) NodeReplacePrev(parent NT, prev NT, newNode NT) NT {
 	return newNode
 }
 
-func (t *CpsTree[K, V, NT]) NodeInsert(cur NT, parent NT, newNode NT, findFun findFunType[K, NT]) (NT, NT, error) {
+func (t *CpsTree[K, V, NT]) NodeInsert(cur NT, parent NT, newNode NT, findFun FindFunType[K, NT]) (NT, NT, error) {
 	key := newNode.GetKey()
 	finded, fparent := findFun(cur, parent, key)
 	var err error = nil
 	if !finded.IsNil() {
-		err = ErrorSameKey
+		err = btree.ErrorSameKey
 	} else {
 		finded = t.NodeReplace(fparent, newNode)
 	}
@@ -129,13 +131,13 @@ func (t *CpsTree[K, V, NT]) ZeroOneChildNodeDelete(target NT, parent NT) NT {
 	return target
 }
 
-func (t *CpsTree[K, V, NT]) NodeDelete(cur NT, parent NT, key K, findFun findFunType[K, NT], insertFun func(NT, NT, NT)) (NT, NT, error) {
+func (t *CpsTree[K, V, NT]) NodeDelete(cur NT, parent NT, key K, findFun FindFunType[K, NT], insertFun func(NT, NT, NT)) (NT, NT, error) {
 	finded, fparent := findFun(cur, parent, key)
 	var err error = nil
 	var newChild NT = finded
 
 	if finded.IsNil() {
-		err = ErrorNodeNotFound
+		err = btree.ErrorNodeNotFound
 	} else {
 		newChild = t.ZeroOneChildNodeDelete(finded, fparent)
 		if !newChild.IsEqual(finded) {

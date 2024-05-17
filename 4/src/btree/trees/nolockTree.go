@@ -1,6 +1,8 @@
-package btree
+package trees
 
 import (
+	"parallel-prog/4/btree"
+
 	"golang.org/x/exp/constraints"
 )
 
@@ -24,7 +26,7 @@ func (t *NoLockTree[K, V]) Find(key K) (V, error) {
 
 	n, _ := t.subFind(t.tree.root, nil, key)
 	if n.IsNil() {
-		return nilValue, ErrorNodeNotFound
+		return nilValue, btree.ErrorNodeNotFound
 	} else {
 		return n.GetValue(), nil
 	}

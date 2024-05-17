@@ -10,8 +10,6 @@ import (
 
 const MAX_INT = 16
 
-type tree btree.Btree[int, int]
-
 type insertEvent struct {
 	kv  int
 	res error
@@ -22,14 +20,14 @@ type insertEvent struct {
 func (e *insertEvent) generate(rg *rand.Rand) {
 	e.kv = rg.Intn(MAX_INT)
 }
-func (e *insertEvent) execute(t tree) {
+func (e *insertEvent) execute(t btree.Btree[int, int]) {
 	e.res = t.Insert(e.kv, e.kv)
 }
-func (e *insertEvent) check(t tree) bool {
+func (e *insertEvent) check(t btree.Btree[int, int]) bool {
 	e.resCheck = t.Insert(e.kv, e.kv)
 	return e.res == e.resCheck
 }
-func (e *insertEvent) rollback(t tree) {
+func (e *insertEvent) rollback(t btree.Btree[int, int]) {
 	if e.resCheck == nil {
 		t.Delete(e.kv)
 	}
@@ -51,14 +49,14 @@ type deleteEvent struct {
 func (e *deleteEvent) generate(rg *rand.Rand) {
 	e.kv = rg.Intn(MAX_INT)
 }
-func (e *deleteEvent) execute(t tree) {
+func (e *deleteEvent) execute(t btree.Btree[int, int]) {
 	e.res = t.Delete(e.kv)
 }
-func (e *deleteEvent) check(t tree) bool {
+func (e *deleteEvent) check(t btree.Btree[int, int]) bool {
 	e.resCheck = t.Delete(e.kv)
 	return e.res == e.resCheck
 }
-func (e *deleteEvent) rollback(t tree) {
+func (e *deleteEvent) rollback(t btree.Btree[int, int]) {
 	if e.resCheck == nil {
 		t.Insert(e.kv, e.kv)
 	}
@@ -78,15 +76,15 @@ type findEvent struct {
 func (e *findEvent) generate(rg *rand.Rand) {
 	e.kv = rg.Intn(MAX_INT)
 }
-func (e *findEvent) execute(t tree) {
+func (e *findEvent) execute(t btree.Btree[int, int]) {
 	_, e.res = t.Find(e.kv)
 }
-func (e *findEvent) check(t tree) bool {
+func (e *findEvent) check(t btree.Btree[int, int]) bool {
 	cp := *e
 	cp.execute(t)
 	return cp == *e
 }
-func (e *findEvent) rollback(t tree) {
+func (e *findEvent) rollback(t btree.Btree[int, int]) {
 }
 func (e *findEvent) stringify() string {
 	return fmt.Sprintf("Find(%d): | err: %v", e.kv, e.res)
@@ -97,13 +95,13 @@ func (e *findEvent) clean() {
 
 type event interface {
 	generate(*rand.Rand)
-	execute(tree)
-	check(tree) bool
+	execute(btree.Btree[int, int])
+	check(btree.Btree[int, int]) bool
 	stringify() string
 	clean()
 
 	// this is a little bit strange too. Maybe we should use some other method
-	rollback(tree)
+	rollback(btree.Btree[int, int])
 }
 
 type thread struct {
@@ -130,7 +128,7 @@ func newThread(size int, rg *rand.Rand) *thread {
 	return &thread{events: events, curstep: 0}
 }
 
-func (th *thread) execute(t tree) {
+func (th *thread) execute(t btree.Btree[int, int]) {
 
 	for i, ev := range th.events {
 		th.curstep = i
@@ -151,14 +149,14 @@ func (th *thread) clean() {
 
 type Checker struct {
 	threads           []*thread
-	generateTree      tree
-	checkTree         tree
+	generateTree      btree.Btree[int, int]
+	checkTree         btree.Btree[int, int]
 	timeout           time.Duration
-	emptyCheckTree    func() tree
-	emptyGenerateTree func() tree
+	emptyCheckTree    func() btree.Btree[int, int]
+	emptyGenerateTree func() btree.Btree[int, int]
 }
 
-func MakeChecker(generateTree tree, emptyGenerateTree func() tree, checkTree tree, emptyCheckTree func() tree, threadNum int, threadSize int, randSeed int64, timeout time.Duration) Checker {
+func MakeChecker(generateTree btree.Btree[int, int], emptyGenerateTree func() btree.Btree[int, int], checkTree btree.Btree[int, int], emptyCheckTree func() btree.Btree[int, int], threadNum int, threadSize int, randSeed int64, timeout time.Duration) Checker {
 	randGen := rand.New(rand.NewSource(randSeed))
 	threads := make([]*thread, threadNum)
 	for i := 0; i < threadNum; i++ {

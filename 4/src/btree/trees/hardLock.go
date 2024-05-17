@@ -1,7 +1,8 @@
-package btree
+package trees
 
 import (
 	"fmt"
+	"parallel-prog/4/btree"
 	"sync"
 
 	"golang.org/x/exp/constraints"
@@ -34,7 +35,7 @@ func (t *HardLockTree[K, V]) Find(key K) (V, error) {
 
 	n, _ := t.subFind(t.tree.root, nil, key)
 	if n.IsNil() {
-		return nilValue, ErrorNodeNotFound
+		return nilValue, btree.ErrorNodeNotFound
 	} else {
 		return n.GetValue(), nil
 	}

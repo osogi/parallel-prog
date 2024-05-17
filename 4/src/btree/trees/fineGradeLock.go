@@ -1,8 +1,9 @@
-package btree
+package trees
 
 import (
 	"fmt"
 	"log"
+	"parallel-prog/4/btree"
 
 	"golang.org/x/exp/constraints"
 )
@@ -40,7 +41,7 @@ func (extenalTree *FineGradeLockTree[K, V]) Find(key K) (V, error) {
 	defer t.unlockNode(par, true)
 
 	if n.IsNil() {
-		return nilValue, ErrorNodeNotFound
+		return nilValue, btree.ErrorNodeNotFound
 	} else {
 		return n.GetValue(), nil
 	}

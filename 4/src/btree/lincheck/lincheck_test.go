@@ -3,12 +3,14 @@
 
 // The test takes too long under the race detector.
 
-package lincheck
+package lincheck_test
 
 import (
 	"fmt"
 	"math/rand"
 	"parallel-prog/4/btree"
+	"parallel-prog/4/btree/lincheck"
+	"parallel-prog/4/btree/trees"
 	"testing"
 	"time"
 )
@@ -22,17 +24,17 @@ const threadLen = 3
 func TestLincheck(t *testing.T) {
 	rg := rand.New(rand.NewSource(seed))
 
-	gen := btree.NewNoLockTree[int, int]()
-	emptyGen := func() tree {
-		return btree.NewNoLockTree[int, int]()
+	gen := trees.NewNoLockTree[int, int]()
+	emptyGen := func() btree.Btree[int, int] {
+		return trees.NewNoLockTree[int, int]()
 	}
 
-	checker := NewSimpleTree[int, int]()
-	emptyCheck := func() tree {
-		return NewSimpleTree[int, int]()
+	checker := lincheck.NewSimpleTree[int, int]()
+	emptyCheck := func() btree.Btree[int, int] {
+		return lincheck.NewSimpleTree[int, int]()
 	}
 	for i := 0; i < diffSeedsNum; i++ {
-		c := MakeChecker(gen, emptyGen, checker, emptyCheck, threadsNum, threadLen, int64(rg.Int()), 5*time.Second)
+		c := lincheck.MakeChecker(gen, emptyGen, checker, emptyCheck, threadsNum, threadLen, int64(rg.Int()), 5*time.Second)
 		trace := c.RunCheck(repeatRunNum)
 		if trace != nil {
 			fmt.Print(trace)
