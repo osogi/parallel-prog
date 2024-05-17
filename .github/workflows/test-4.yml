@@ -1,0 +1,32 @@
+name: Tests-4
+
+on:
+  push:
+    branches:
+      - master
+    paths: 
+      - 4/src/**
+      - .github/workflows/test-4.yml
+  pull_request:
+    paths:  
+      - 4/src/**
+      - .github/workflows/test-4.yml
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./4/src/
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+
+      - name: Test lincheck
+        run: go test -v ./btree/lincheck/
+
+      - name: Test stacks with lincheck
+        run: go test -v ./btree/trees/tests/
