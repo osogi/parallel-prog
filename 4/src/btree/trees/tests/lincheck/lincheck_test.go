@@ -1,7 +1,3 @@
-//go:build !race
-// +build !race
-
-// The tests takes too long under the race detector.
 package trees_test
 
 import (

@@ -29,4 +29,7 @@ jobs:
         run: go test -v ./btree/lincheck/
 
       - name: Test stacks with lincheck
-        run: go test -v ./btree/trees/tests/
+        run: go test --timeout=20m -v ./btree/trees/tests/lincheck
+      
+      - name: Test stacks with handwritten tests
+        run: go test --timeout=5m --count=100 ./btree/trees/tests/
